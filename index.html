@@ -93,6 +93,21 @@
   .toggle{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
   .on2{background:rgba(58,208,122,.18);color:var(--green)} .off2{background:#2a2f3a;color:var(--dim)}
   .hint{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
+  /* 직원 카드 안 진행업무 */
+  .emptasks{margin-top:12px;border-top:1px solid #20242e;padding-top:10px;display:flex;flex-direction:column;gap:7px}
+  .et{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .et .ett{flex:1;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .et b{color:var(--gold);font-size:12px}
+  .et .chs{font-size:10px;color:var(--dim);margin-left:2px}
+  /* 모바일 정리 */
+  @media(max-width:640px){
+    body{padding:14px;padding-top:calc(14px + env(safe-area-inset-top))}
+    .top{flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:16px}
+    .brand{font-size:21px}
+    .clock{text-align:left;font-size:12px}
+    .grid{gap:16px}
+    .floor{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -115,10 +130,6 @@
       <div class="floor" id="floor"></div>
     </div>
     <div class="side">
-      <div class="card">
-        <div class="section-title" style="margin-bottom:10px">진행 업무</div>
-        <div id="tasks"></div>
-      </div>
       <div class="card">
         <div class="section-title" style="margin-bottom:10px">활동 로그</div>
         <div class="log" id="log"></div>
@@ -168,33 +179,31 @@ function render(){
   document.getElementById('onmsg').textContent=`직원 ${STATE.employees.length}명 · 작업중 ${on}명`;
 
   // floor
+  const dcls={"완료":"d-done","진행중":"d-work","대기":"d-wait"};
   let h="";
   for(const e of STATE.employees){
     const work=stWork(e.status);
+    const my=(STATE.tasks||[]).filter(t=>t.employee===e.id);
+    const tasksHtml = my.length? '<div class="emptasks">'+my.map(t=>{
+      const chs=Object.entries(t.channels||{}).map(([k,v])=>v==='done'?'✅':'·').join('');
+      return `<div class="et"><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${t.title}</span><span class="chs">${chs}</span><b>${t.progress}%</b></div>`;
+    }).join('')+'</div>' : '';
     h+=`<div class="desk ${work?'work':''}" onclick="openEmp('${e.id}')">
       <span class="badge ${stCls[e.status]||'b-wait'}">${e.status}</span>
       <div class="ava">${e.avatar} <span style="font-size:20px">${e.mood||''}</span></div>
       <div class="nm">${e.name}</div>
       <div class="role">${e.role}</div>
-      <div class="cur">${e.currentTask?('🛠️ <b>'+e.currentTask+'</b>'+(e.step?' · '+e.step:'')):'<span style=\"color:#8b93a3\">대기 중 — 클릭해서 업무 지시</span>'}</div>
+      <div class="cur">${e.currentTask?('🛠️ <b>'+e.currentTask+'</b>'+(e.step?' · '+e.step:'')):'<span style=\"color:#8b93a3\">대기 중 — 탭해서 업무 지시</span>'}</div>
       ${e.currentTask?`<div class="bar"><i style="width:${e.progress||0}%"></i></div>`:''}
       <div class="stats">
         <div><b>${e.stats?.제작완료??0}</b>제작</div>
         <div><b>${e.stats?.게시완료??0}</b>게시</div>
       </div>
+      ${tasksHtml}
     </div>`;
   }
   h+=`<div class="hire" onclick="hire()"><div class="plus">＋</div><div>직원 채용</div></div>`;
   document.getElementById('floor').innerHTML=h;
-
-  // tasks
-  const dcls={"완료":"d-done","진행중":"d-work","대기":"d-wait"};
-  document.getElementById('tasks').innerHTML = STATE.tasks.length? STATE.tasks.map(t=>{
-    const chs=Object.entries(t.channels||{}).map(([k,v])=>`${v==='done'?'✅':'·'}${k}`).join(' ');
-    return `<div class="tk"><span class="dot ${dcls[t.status]||'d-wait'}"></span>
-      <div class="tt">${t.title}<div class="ch">${chs}</div></div>
-      <b style="color:var(--gold)">${t.progress}%</b></div>`;
-  }).join('') : '<div class="hint">진행 중인 업무 없음</div>';
 
   // log
   document.getElementById('log').innerHTML = (STATE.activityLog||[]).map(l=>
