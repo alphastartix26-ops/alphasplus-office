@@ -12,16 +12,11 @@
 <meta name="apple-mobile-web-app-title" content="S+ 사무실">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{
-    --bg:#0b0c10; --panel:#14161d; --panel2:#1b1e27; --line:#272b36;
-    --gold:#e8b94b; --silver:#cbd2dc; --txt:#eaf0f6; --dim:#8b93a3;
-    --green:#3ad07a; --blue:#4d8dff; --red:#ff5656;
-  }
+  :root{--bg:#0b0c10;--panel:#14161d;--panel2:#1b1e27;--line:#272b36;--gold:#e8b94b;--silver:#cbd2dc;--txt:#eaf0f6;--dim:#8b93a3;--green:#3ad07a;--blue:#4d8dff;--red:#ff5656}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:
-    radial-gradient(1200px 600px at 70% -10%, #1a1d27 0%, var(--bg) 60%);
-    color:var(--txt);min-height:100vh;padding:28px}
+  body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:radial-gradient(1200px 600px at 70% -10%,#1a1d27 0%,var(--bg) 60%);color:var(--txt);min-height:100vh;padding:28px}
   .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
   .brand{font-size:26px;font-weight:800;letter-spacing:.5px}
   .brand b{color:var(--gold)}
@@ -30,14 +25,10 @@
   .grid{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
   @media(max-width:900px){.grid{grid-template-columns:1fr}}
   .section-title{font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:0 0 14px 4px}
-  /* office floor */
   .floor{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-  .desk{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
-    border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;
-    position:relative;transition:.18s;overflow:hidden}
+  .desk{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;position:relative;transition:.18s;overflow:hidden}
   .desk:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 30px #0008}
-  .desk .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;
-    padding:5px 11px;border-radius:20px}
+  .desk .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px}
   .b-wait{background:#2a2f3a;color:var(--silver)}
   .b-work{background:rgba(77,141,255,.18);color:var(--blue);border:1px solid #4d8dff55}
   .b-review{background:rgba(232,185,75,.18);color:var(--gold);border:1px solid #e8b94b55}
@@ -49,64 +40,50 @@
   .cur{margin-top:14px;font-size:13px;color:var(--silver);min-height:18px}
   .cur b{color:var(--txt)}
   .bar{height:8px;background:#0c0e14;border-radius:8px;margin-top:8px;overflow:hidden;border:1px solid #00000055}
-  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#ffd778);
-    border-radius:8px;transition:width .5s;box-shadow:0 0 10px #e8b94b88}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#ffd778);border-radius:8px;transition:width .5s;box-shadow:0 0 10px #e8b94b88}
   .stats{display:flex;gap:14px;margin-top:14px;font-size:12px;color:var(--dim)}
   .stats b{color:var(--txt);font-size:15px;display:block}
-  .hire{display:flex;align-items:center;justify-content:center;flex-direction:column;
-    border:1.5px dashed var(--line);color:var(--dim);min-height:210px;border-radius:18px;
-    cursor:pointer;transition:.18s}
+  .pin{position:absolute;top:14px;left:14px;background:rgba(255,86,86,.18);color:var(--red);border:1px solid #ff565655;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px}
+  .hire{display:flex;align-items:center;justify-content:center;flex-direction:column;border:1.5px dashed var(--line);color:var(--dim);min-height:210px;border-radius:18px;cursor:pointer;transition:.18s}
   .hire:hover{border-color:var(--gold);color:var(--gold)}
   .hire .plus{font-size:38px}
-  /* side */
   .side{display:flex;flex-direction:column;gap:18px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
-  .log{max-height:340px;overflow:auto}
+  .log{max-height:420px;overflow:auto}
   .log .row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #20242e;font-size:13px}
   .log .row:last-child{border:0}
   .log .t{color:var(--dim);font-size:11px;white-space:nowrap}
   .log .m{color:var(--silver)}
-  .tk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #20242e}
-  .tk:last-child{border:0}
   .dot{width:9px;height:9px;border-radius:50%;flex:none}
   .d-done{background:var(--green)} .d-work{background:var(--blue)} .d-wait{background:var(--silver)}
-  .tk .tt{flex:1;font-size:14px}
-  .tk .ch{font-size:11px;color:var(--dim)}
-  /* modal */
   .ov{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
   .ov.on{display:flex}
-  .modal{background:linear-gradient(180deg,var(--panel) 0,var(--panel2) 100%);border:1px solid var(--gold);
-    border-radius:22px;max-width:520px;width:100%;padding:26px;box-shadow:0 20px 60px #000b}
+  .modal{background:linear-gradient(180deg,var(--panel) 0,var(--panel2) 100%);border:1px solid var(--gold);border-radius:22px;max-width:520px;width:100%;padding:26px;box-shadow:0 20px 60px #000b;position:relative;max-height:90vh;overflow:auto}
   .modal h2{font-size:24px;display:flex;align-items:center;gap:12px}
   .modal .role2{color:var(--gold);font-size:13px;font-weight:700;margin:2px 0 16px}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
   .chip{background:#222733;border:1px solid var(--line);color:var(--silver);font-size:12px;padding:6px 12px;border-radius:20px}
   .lbl{font-size:12px;color:var(--dim);letter-spacing:1px;margin:16px 0 8px}
-  textarea{width:100%;background:#0c0e14;border:1px solid var(--line);border-radius:12px;color:var(--txt);
-    padding:12px;font-size:14px;font-family:inherit;resize:vertical;min-height:72px}
-  .btn{background:linear-gradient(90deg,var(--gold),#ffd778);color:#1a1407;font-weight:800;border:0;
-    padding:12px 18px;border-radius:12px;cursor:pointer;font-size:14px;width:100%;margin-top:10px}
+  input,textarea{width:100%;background:#0c0e14;border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:12px;font-size:14px;font-family:inherit}
+  textarea{resize:vertical;min-height:72px}
+  .btn{background:linear-gradient(90deg,var(--gold),#ffd778);color:#1a1407;font-weight:800;border:0;padding:12px 18px;border-radius:12px;cursor:pointer;font-size:14px;width:100%;margin-top:10px}
   .btn.sec{background:#222733;color:var(--silver);font-weight:600}
+  .btn.danger{background:rgba(255,86,86,.15);color:var(--red);border:1px solid #ff565655}
   .x{position:absolute;top:18px;right:22px;color:var(--dim);cursor:pointer;font-size:22px}
-  .auto{display:flex;align-items:center;justify-content:space-between;background:#0c0e14;border:1px solid var(--line);
-    border-radius:12px;padding:11px 14px;margin-top:8px;font-size:13px}
+  .auto{display:flex;align-items:center;justify-content:space-between;background:#0c0e14;border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-top:8px;font-size:13px;cursor:pointer}
   .toggle{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
   .on2{background:rgba(58,208,122,.18);color:var(--green)} .off2{background:#2a2f3a;color:var(--dim)}
   .hint{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
-  /* 직원 카드 안 진행업무 */
   .emptasks{margin-top:12px;border-top:1px solid #20242e;padding-top:10px;display:flex;flex-direction:column;gap:7px}
   .et{display:flex;align-items:center;gap:8px;font-size:12.5px}
   .et .ett{flex:1;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .et b{color:var(--gold);font-size:12px}
-  .et .chs{font-size:10px;color:var(--dim);margin-left:2px}
-  /* 모바일 정리 */
+  .et b{color:var(--gold);font-size:12px}.et .chs{font-size:10px;color:var(--dim)}
+  .inbox{background:#0c0e14;border:1px solid #3a2f12;border-radius:10px;padding:9px 12px;margin-top:7px;font-size:13px;color:#ffe6a8}
   @media(max-width:640px){
     body{padding:14px;padding-top:calc(14px + env(safe-area-inset-top))}
     .top{flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:16px}
-    .brand{font-size:21px}
-    .clock{text-align:left;font-size:12px}
-    .grid{gap:16px}
-    .floor{grid-template-columns:1fr}
+    .brand{font-size:21px}.clock{text-align:left;font-size:12px}
+    .grid{gap:16px}.floor{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -114,16 +91,15 @@
   <div id="gate" style="position:fixed;inset:0;background:radial-gradient(800px 400px at 50% 30%,#1a1d27,#0b0c10 70%);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px">
     <div style="font-size:30px;font-weight:800">🔒 ALPHA <span style="color:#e8b94b">S+</span> AI 사무실</div>
     <div style="color:#8b93a3;font-size:13px">비밀번호를 입력하세요</div>
-    <input id="pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')auth()"
-      style="background:#14161d;border:1px solid #272b36;border-radius:12px;color:#fff;padding:13px 18px;font-size:16px;text-align:center;width:240px">
+    <input id="pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')auth()" style="width:240px;text-align:center">
     <button onclick="auth()" style="background:linear-gradient(90deg,#e8b94b,#ffd778);color:#1a1407;font-weight:800;border:0;padding:12px 34px;border-radius:12px;cursor:pointer;font-size:15px">입장</button>
     <div id="pwerr" style="color:#ff5656;font-size:12px;height:14px"></div>
   </div>
+
   <div class="top">
     <div class="brand">🏢 ALPHA <b>S+</b> AI 사무실</div>
-    <div class="clock"><div id="date">—</div><div><span class="on" id="oncount">●</span> <span id="onmsg"></span></div></div>
+    <div class="clock"><div id="onmsg">—</div><div><span class="on">●</span> <span id="live">실시간 연결 중…</span></div></div>
   </div>
-
   <div class="grid">
     <div>
       <div class="section-title">사무실 · 직원</div>
@@ -137,130 +113,147 @@
     </div>
   </div>
 
-  <!-- 직원 모달 -->
-  <div class="ov" id="ov" onclick="if(event.target===this)close_()">
-    <div class="modal" id="modal"></div>
-  </div>
+  <div class="ov" id="ov" onclick="if(event.target===this)close_()"><div class="modal" id="modal"></div></div>
 
 <script>
-// 서버 없이 파일로 직접 열 때(file://)를 위한 내장 데이터(폴백).
-const INITIAL_STATE = {
-  "company":"ALPHA S+ AI 사무실","updatedAt":"2026-06-01 20:10",
-  "employees":[{"id":"reel-pd","name":"릴이","role":"릴스 PD","avatar":"🎬","desk":"A-1","hiredAt":"2026-06-01","skill":"reel","status":"대기중","mood":"🙂","currentTask":null,"progress":0,"step":null,
-    "autoTasks":[{"title":"급등/급락주 뉴스 모니터링","schedule":"매일 09:00","enabled":false}],
-    "stats":{"제작완료":1,"게시완료":1,"총재생":0},
-    "skills":["차트 방향 판독","뉴스·공시 조사","보조지표 분석","4채널 게시","썸네일 고정"]}],
-  "tasks":[{"id":"t-prfx","employee":"reel-pd","title":"PRFX 급등 릴스","status":"완료","progress":100,
-    "channels":{"youtube":"done","facebook":"done","instagram":"done","naver":"done"},
-    "note":"딥솔라 AI + 엔비디아 급등 / ADX·MACD 컨플루언스","updatedAt":"2026-06-01"}],
-  "activityLog":[{"time":"2026-06-01 20:05","who":"릴이","msg":"PRFX 4채널 게시 완료 🎉"},
-    {"time":"2026-06-01 19:40","who":"릴이","msg":"보조지표 한 화면 순차 설명(ADX→MACD) 적용"},
-    {"time":"2026-06-01 18:30","who":"릴이","msg":"PRFX 급등 뉴스 조사·검증 완료"}]
-};
-let STATE=null, openId=null;
-
-async function load(){
-  try{
-    const r=await fetch('state.json?ts='+Date.now());
-    if(!r.ok) throw 0;
-    STATE=await r.json();
-  }catch(e){
-    STATE = INITIAL_STATE; // 서버 없이 file://로 열린 경우
-  }
-  render();
-  if(openId) openEmp(openId);
-}
+const SB_URL="https://flshdddpxxrftyuopyop.supabase.co";
+const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsc2hkZGRweHhyZnR5dW9weW9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDE1NTYsImV4cCI6MjA5NTg3NzU1Nn0.EZMkwT51HKnt-3n5E7fbrK5Zbbxuvl8-Zxyz5paoOYU";
+const sb = supabase.createClient(SB_URL, SB_ANON);
+let EMP=[], TASKS=[], LOG=[], INST=[], openId=null;
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const stCls={"대기중":"b-wait","작업중":"b-work","검수대기":"b-review"};
-const stWork=s=>s==="작업중";
 
+async function loadAll(){
+  const [e,t,a,i]=await Promise.all([
+    sb.from('employees').select('*').order('sort'),
+    sb.from('tasks').select('*').order('created_at',{ascending:false}),
+    sb.from('activity').select('*').order('created_at',{ascending:false}).limit(25),
+    sb.from('instructions').select('*').eq('status','new').order('created_at',{ascending:false}),
+  ]);
+  EMP=e.data||[];TASKS=t.data||[];LOG=a.data||[];INST=i.data||[];
+  document.getElementById('live').textContent='실시간 연결됨';
+  render(); if(openId) openEmp(openId);
+}
 function render(){
-  document.getElementById('date').textContent=STATE.updatedAt;
-  const on=STATE.employees.filter(e=>e.status!=="대기중").length;
-  document.getElementById('onmsg').textContent=`직원 ${STATE.employees.length}명 · 작업중 ${on}명`;
-
-  // floor
+  const on=EMP.filter(x=>x.status!=='대기중').length;
+  document.getElementById('onmsg').textContent=`직원 ${EMP.length}명 · 작업중 ${on}명`;
   const dcls={"완료":"d-done","진행중":"d-work","대기":"d-wait"};
   let h="";
-  for(const e of STATE.employees){
-    const work=stWork(e.status);
-    const my=(STATE.tasks||[]).filter(t=>t.employee===e.id);
-    const tasksHtml = my.length? '<div class="emptasks">'+my.map(t=>{
+  for(const e of EMP){
+    const work=e.status==='작업중';
+    const my=TASKS.filter(t=>t.employee===e.id);
+    const pend=INST.filter(x=>x.employee===e.id).length;
+    const tasksHtml=my.length?'<div class="emptasks">'+my.map(t=>{
       const chs=Object.entries(t.channels||{}).map(([k,v])=>v==='done'?'✅':'·').join('');
-      return `<div class="et"><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${t.title}</span><span class="chs">${chs}</span><b>${t.progress}%</b></div>`;
-    }).join('')+'</div>' : '';
+      return `<div class="et"><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${esc(t.title)}</span><span class="chs">${chs}</span><b>${t.progress}%</b></div>`;
+    }).join('')+'</div>':'';
     h+=`<div class="desk ${work?'work':''}" onclick="openEmp('${e.id}')">
-      <span class="badge ${stCls[e.status]||'b-wait'}">${e.status}</span>
-      <div class="ava">${e.avatar} <span style="font-size:20px">${e.mood||''}</span></div>
-      <div class="nm">${e.name}</div>
-      <div class="role">${e.role}</div>
-      <div class="cur">${e.currentTask?('🛠️ <b>'+e.currentTask+'</b>'+(e.step?' · '+e.step:'')):'<span style=\"color:#8b93a3\">대기 중 — 탭해서 업무 지시</span>'}</div>
-      ${e.currentTask?`<div class="bar"><i style="width:${e.progress||0}%"></i></div>`:''}
-      <div class="stats">
-        <div><b>${e.stats?.제작완료??0}</b>제작</div>
-        <div><b>${e.stats?.게시완료??0}</b>게시</div>
-      </div>
+      ${pend?`<span class="pin">📨 지시 ${pend}</span>`:''}
+      <span class="badge ${stCls[e.status]||'b-wait'}">${esc(e.status)}</span>
+      <div class="ava">${e.avatar||'🧑‍💼'} <span style="font-size:20px">${e.mood||''}</span></div>
+      <div class="nm">${esc(e.name)}</div><div class="role">${esc(e.role)}</div>
+      <div class="cur">${e.current_task?('🛠️ <b>'+esc(e.current_task)+'</b>'+(e.step?' · '+esc(e.step):'')):'<span style=\"color:#8b93a3\">대기 중 — 탭해서 업무 지시</span>'}</div>
+      ${e.current_task?`<div class="bar"><i style="width:${e.progress||0}%"></i></div>`:''}
+      <div class="stats"><div><b>${(e.stats||{}).제작완료||0}</b>제작</div><div><b>${(e.stats||{}).게시완료||0}</b>게시</div></div>
       ${tasksHtml}
     </div>`;
   }
-  h+=`<div class="hire" onclick="hire()"><div class="plus">＋</div><div>직원 채용</div></div>`;
+  h+=`<div class="hire" onclick="openHire()"><div class="plus">＋</div><div>직원 채용</div></div>`;
   document.getElementById('floor').innerHTML=h;
-
-  // log
-  document.getElementById('log').innerHTML = (STATE.activityLog||[]).map(l=>
-    `<div class="row"><span class="t">${l.time.split(' ')[1]||l.time}</span><span class="m"><b style="color:var(--gold)">${l.who}</b> ${l.msg}</span></div>`
-  ).join('');
+  document.getElementById('log').innerHTML=LOG.map(l=>{
+    const tm=(l.created_at||'').slice(11,16);
+    return `<div class="row"><span class="t">${tm}</span><span class="m"><b style="color:var(--gold)">${esc(l.who)}</b> ${esc(l.msg)}</span></div>`;
+  }).join('')||'<div class="hint">활동 없음</div>';
 }
 
 function openEmp(id){
-  openId=id;
-  const e=STATE.employees.find(x=>x.id===id); if(!e)return;
-  const auto=(e.autoTasks||[]).map(a=>`<div class="auto"><span>⏰ ${a.title} <span style="color:#8b93a3">(${a.schedule})</span></span>
-    <span class="toggle ${a.enabled?'on2':'off2'}">${a.enabled?'자동 ON':'OFF'}</span></div>`).join('')||'<div class="hint">등록된 자동 업무 없음</div>';
+  openId=id; const e=EMP.find(x=>x.id===id); if(!e)return;
+  const pend=INST.filter(x=>x.employee===id);
+  const auto=(e.auto_tasks||[]).map((a,i)=>`<div class="auto" onclick="toggleAuto('${id}',${i})"><span>⏰ ${esc(a.title)} <span style="color:#8b93a3">(${esc(a.schedule)})</span></span><span class="toggle ${a.enabled?'on2':'off2'}">${a.enabled?'자동 ON':'OFF'}</span></div>`).join('')||'<div class="hint">등록된 자동 업무 없음</div>';
+  const inbox=pend.length?'<div class="lbl">받은 지시 (대기 중)</div>'+pend.map(p=>`<div class="inbox">📨 ${esc(p.body)}</div>`).join(''):'';
   document.getElementById('modal').innerHTML=`
     <span class="x" onclick="close_()">✕</span>
-    <h2>${e.avatar} ${e.name}</h2>
-    <div class="role2">${e.role} · 자리 ${e.desk} · 입사 ${e.hiredAt}</div>
-    <div class="cur">${e.currentTask?('지금: 🛠️ <b>'+e.currentTask+'</b> ('+(e.progress||0)+'%)'+(e.step?'<br><span style=\"color:#8b93a3\">'+e.step+'</span>':'')):'지금: 대기 중'}</div>
-    <div class="lbl">보유 능력</div>
-    <div class="chips">${(e.skills||[]).map(s=>`<span class="chip">${s}</span>`).join('')}</div>
-    <div class="lbl">자동 업무</div>
-    ${auto}
-    <div class="lbl">오늘 업무 지시</div>
-    <textarea id="ord" placeholder="예: 이 종목 차트 2장 줄게 릴스 만들어줘 / TSLA 급등 분석해줘"></textarea>
-    <button class="btn" onclick="order('${e.name}')">📋 지시문 복사</button>
+    <h2>${e.avatar||'🧑‍💼'} <span id="nmview">${esc(e.name)}</span></h2>
+    <div class="role2">${esc(e.role)} · ${e.status}</div>
+    <div class="cur">${e.current_task?('지금: 🛠️ <b>'+esc(e.current_task)+'</b> ('+(e.progress||0)+'%)'):'지금: 대기 중'}</div>
+    <div class="lbl">이름 수정</div>
+    <div style="display:flex;gap:8px"><input id="rn" value="${esc(e.name)}"><button class="btn" style="width:auto;margin:0;padding:0 18px" onclick="rename_('${id}')">저장</button></div>
+    <div class="lbl">보유 능력</div><div class="chips">${(e.skills||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')||'<span class="hint">없음</span>'}</div>
+    <div class="lbl">자동 업무</div>${auto}
+    ${inbox}
+    <div class="lbl">업무 지시</div>
+    <textarea id="ord" placeholder="예: TSLA 급등 릴스 만들어줘 (차트는 Claude 채팅에)"></textarea>
+    <button class="btn" onclick="sendOrder('${id}')">📨 지시 보내기</button>
     <button class="btn sec" onclick="close_()">닫기</button>
-    <div class="hint">복사한 지시문을 Claude Code 채팅에 붙여넣으면 ${e.name}가 업무를 시작합니다.<br>(차트 이미지는 채팅에 함께 올려주세요)</div>`;
+    <button class="btn danger" onclick="fire('${id}','${esc(e.name)}')">🚪 ${esc(e.name)} 해고</button>
+    <div class="hint">지시는 큐에 쌓이고, 해당 직원(AI)이 받아 처리합니다. 차트 이미지가 필요한 업무는 Claude 채팅에 함께 올려주세요.</div>`;
   document.getElementById('ov').classList.add('on');
 }
 function close_(){openId=null;document.getElementById('ov').classList.remove('on');}
-function order(name){
-  const v=document.getElementById('ord').value.trim();
-  const msg=`[${name}에게 업무 지시] ${v||'(내용을 입력하세요)'}`;
-  navigator.clipboard.writeText(msg).then(()=>{
-    const b=event.target;b.textContent='✅ 복사됨! 채팅에 붙여넣기';setTimeout(()=>b.textContent='📋 지시문 복사',1800);
-  });
+
+async function rename_(id){
+  const v=document.getElementById('rn').value.trim(); if(!v)return;
+  await sb.from('employees').update({name:v}).eq('id',id);
+  await sb.from('activity').insert({who:'사장님',msg:`직원 이름을 '${v}'(으)로 변경`});
 }
-function hire(){
-  alert('새 직원 채용은 Claude에게 말해주세요!\n예) "캡션 작가 직원 한 명 더 만들어줘"');
+async function toggleAuto(id,idx){
+  const e=EMP.find(x=>x.id===id); const at=[...(e.auto_tasks||[])];
+  at[idx]={...at[idx],enabled:!at[idx].enabled};
+  await sb.from('employees').update({auto_tasks:at}).eq('id',id);
+}
+async function sendOrder(id){
+  const v=document.getElementById('ord').value.trim(); if(!v){return;}
+  const e=EMP.find(x=>x.id===id);
+  await sb.from('instructions').insert({employee:id,body:v});
+  await sb.from('activity').insert({who:'사장님',msg:`${e.name}에게 지시: ${v.slice(0,40)}`});
+  document.getElementById('ord').value='';
+  const b=event.target;b.textContent='✅ 보냈습니다';setTimeout(()=>b.textContent='📨 지시 보내기',1500);
+}
+async function fire(id,name){
+  if(!confirm(`${name} 직원을 해고할까요? (되돌릴 수 없음)`))return;
+  await sb.from('employees').delete().eq('id',id);
+  await sb.from('activity').insert({who:'사장님',msg:`${name} 해고`});
+  close_();
+}
+function openHire(){
+  openId=null;
+  document.getElementById('modal').innerHTML=`
+    <span class="x" onclick="close_()">✕</span>
+    <h2>＋ 직원 채용</h2><div class="role2">새 AI 직원을 추가합니다</div>
+    <div class="lbl">이름</div><input id="hn" placeholder="예: 시황이">
+    <div class="lbl">역할</div><input id="hr" placeholder="예: 시황 브리핑가">
+    <div class="lbl">아바타 (이모지 1개)</div><input id="ha" placeholder="예: 📈" value="🧑‍💼">
+    <button class="btn" onclick="hireSubmit()">채용하기</button>
+    <button class="btn sec" onclick="close_()">취소</button>
+    <div class="hint">채용 후, 그 직원의 '두뇌(업무지침)'는 Claude에게 만들어 달라고 하시면 됩니다.</div>`;
+  document.getElementById('ov').classList.add('on');
+}
+async function hireSubmit(){
+  const n=document.getElementById('hn').value.trim(), r=document.getElementById('hr').value.trim(), a=document.getElementById('ha').value.trim()||'🧑‍💼';
+  if(!n||!r){alert('이름과 역할을 입력하세요');return;}
+  const id='emp-'+Math.random().toString(36).slice(2,8);
+  await sb.from('employees').insert({id,name:n,role:r,avatar:a,status:'대기중',mood:'🙂',sort:EMP.length,stats:{},skills:[],auto_tasks:[]});
+  await sb.from('activity').insert({who:'사장님',msg:`${n} (${r}) 채용 🎉`});
+  close_();
 }
 
-// ── 비밀번호 잠금 (가벼운 보호) ──
+// 비밀번호 게이트
 const PW_HASH="8316695b9ebb1aae9960d1f261bd3009348705c8cb93761206fec89708a4d8a7";
-async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function auth(){
-  const v=document.getElementById('pw').value;
-  if(await sha256(v)===PW_HASH){localStorage.setItem('office_auth','1');enter();}
-  else{document.getElementById('pwerr').textContent='비밀번호가 틀렸습니다';}
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function auth(){const v=document.getElementById('pw').value;if(await sha256(v)===PW_HASH){localStorage.setItem('office_auth','1');enter();}else{document.getElementById('pwerr').textContent='비밀번호가 틀렸습니다';}}
+function enter(){
+  document.getElementById('gate').style.display='none';
+  loadAll();
+  sb.channel('office')
+    .on('postgres_changes',{event:'*',schema:'public',table:'employees'},loadAll)
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},loadAll)
+    .on('postgres_changes',{event:'*',schema:'public',table:'activity'},loadAll)
+    .on('postgres_changes',{event:'*',schema:'public',table:'instructions'},loadAll)
+    .subscribe();
 }
-function enter(){document.getElementById('gate').style.display='none';load();setInterval(load,3000);}
 if(localStorage.getItem('office_auth')==='1'){enter();}
 else{setTimeout(()=>document.getElementById('pw')?.focus(),100);}
-
-// PWA 서비스워커 등록 (설치형 앱)
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
 </html>
