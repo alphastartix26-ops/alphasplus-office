@@ -1,0 +1,42 @@
+{
+  "company": "ALPHA S+ AI 사무실",
+  "updatedAt": "2026-06-01 20:10",
+  "employees": [
+    {
+      "id": "reel-pd",
+      "name": "릴이",
+      "role": "릴스 PD",
+      "avatar": "🎬",
+      "desk": "A-1",
+      "hiredAt": "2026-06-01",
+      "skill": "reel",
+      "status": "대기중",
+      "mood": "🙂",
+      "currentTask": null,
+      "progress": 0,
+      "step": null,
+      "autoTasks": [
+        { "title": "급등/급락주 뉴스 모니터링", "schedule": "매일 09:00", "enabled": false }
+      ],
+      "stats": { "제작완료": 1, "게시완료": 1, "총재생": 0 },
+      "skills": ["차트 방향 판독", "뉴스·공시 조사", "보조지표 분석", "4채널 게시", "썸네일 고정"]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t-prfx",
+      "employee": "reel-pd",
+      "title": "PRFX 급등 릴스",
+      "status": "완료",
+      "progress": 100,
+      "channels": { "youtube": "done", "facebook": "done", "instagram": "done", "naver": "done" },
+      "note": "딥솔라 AI + 엔비디아 급등 / ADX·MACD 컨플루언스",
+      "updatedAt": "2026-06-01"
+    }
+  ],
+  "activityLog": [
+    { "time": "2026-06-01 20:05", "who": "릴이", "msg": "PRFX 4채널 게시 완료 🎉" },
+    { "time": "2026-06-01 19:40", "who": "릴이", "msg": "보조지표 한 화면 순차 설명(ADX→MACD) 적용" },
+    { "time": "2026-06-01 18:30", "who": "릴이", "msg": "PRFX 급등 뉴스 조사·검증 완료" }
+  ]
+}
