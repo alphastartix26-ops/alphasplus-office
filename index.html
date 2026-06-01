@@ -263,8 +263,9 @@ function openEmp(id){
     <div class="lbl">자동 업무</div>${auto}
     ${inbox}
     <div class="lbl">업무 지시 <span onclick="startVoice()" style="cursor:pointer;color:var(--gold);margin-left:6px">🎤 음성으로</span></div>
-    <textarea id="ord" placeholder="예: TSLA 급등 릴스 만들어줘 (차트는 Claude 채팅에)"></textarea>
-    <button class="btn" onclick="sendOrder('${id}')">📨 지시 보내기</button>
+    <textarea id="ord" placeholder="예: 이 차트 2장으로 릴스 만들어줘 / 모닝브리핑 5장 게시"></textarea>
+    <input type="file" id="ordfiles" accept="image/*" multiple style="margin-top:8px;width:100%;font-size:12px;color:var(--silver)">
+    <button class="btn" onclick="sendOrder('${id}')">📨 지시 보내기 (이미지 첨부 가능)</button>
     <button class="btn sec" onclick="openHistory('${id}')">📋 오늘 한 업무 기록</button>
     <button class="btn sec" onclick="close_()">닫기</button>
     <button class="btn danger" onclick="fire('${id}','${esc(e.name)}')">🚪 ${esc(e.name)} 해고</button>
@@ -296,10 +297,20 @@ async function toggleAuto(id,idx){
   await sb.from('employees').update({auto_tasks:at}).eq('id',id);
 }
 async function sendOrder(id){
-  const v=document.getElementById('ord').value.trim(); if(!v){return;}
-  await sb.from('instructions').insert({employee:id,body:v});
-  document.getElementById('ord').value='';
-  const b=event.target;b.textContent='✅ 보냈습니다';setTimeout(()=>b.textContent='📨 지시 보내기',1500);
+  const v=document.getElementById('ord').value.trim();
+  const fi=document.getElementById('ordfiles'); const files=fi?fi.files:[];
+  if(!v && !files.length){return;}
+  const b=event.target; b.textContent='⏳ 업로드 중...';
+  let urls=[];
+  for(let i=0;i<files.length;i++){
+    const f=files[i]; const path=id+'/'+Date.now()+'_'+i+'_'+f.name.replace(/[^\w.]/g,'_');
+    const up=await sb.storage.from('attachments').upload(path,f,{upsert:true,contentType:f.type});
+    if(!up.error){ urls.push(sb.storage.from('attachments').getPublicUrl(path).data.publicUrl); }
+  }
+  const body=(v||'(이미지 첨부)')+(urls.length?('\n📎 '+urls.join(' ')):'');
+  await sb.from('instructions').insert({employee:id,body});
+  document.getElementById('ord').value=''; if(fi) fi.value='';
+  b.textContent='✅ 보냈습니다'+(urls.length?` (이미지 ${urls.length}장)`:''); setTimeout(()=>{b.textContent='📨 지시 보내기 (이미지 첨부 가능)';},1800);
 }
 async function fire(id,name){
   if(!confirm(`${name} 직원을 해고할까요? (되돌릴 수 없음)`))return;
