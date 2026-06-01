@@ -32,8 +32,10 @@
   .b-wait{background:#2a2f3a;color:var(--silver)}
   .b-work{background:rgba(77,141,255,.18);color:var(--blue);border:1px solid #4d8dff55}
   .b-review{background:rgba(232,185,75,.18);color:var(--gold);border:1px solid #e8b94b55}
-  .ava{font-size:54px;line-height:1;filter:drop-shadow(0 4px 10px #0007)}
-  .work .ava{animation:bob 1.6s ease-in-out infinite}
+  .avawrap{position:relative;width:66px;height:66px}
+  .ava{width:66px;height:66px;border-radius:12px;background:#0c0e14;border:1px solid var(--line);image-rendering:pixelated;display:block}
+  .work .avawrap{animation:bob 1.6s ease-in-out infinite}
+  .mood{position:absolute;bottom:-7px;right:-7px;font-size:24px;filter:drop-shadow(0 1px 2px #000)}
   @keyframes bob{50%{transform:translateY(-5px)}}
   .nm{font-size:20px;font-weight:800;margin-top:10px}
   .role{color:var(--gold);font-size:13px;font-weight:700;margin-top:2px}
@@ -43,7 +45,7 @@
   .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#ffd778);border-radius:8px;transition:width .5s;box-shadow:0 0 10px #e8b94b88}
   .stats{display:flex;gap:14px;margin-top:14px;font-size:12px;color:var(--dim)}
   .stats b{color:var(--txt);font-size:15px;display:block}
-  .pin{position:absolute;top:14px;left:14px;background:rgba(255,86,86,.18);color:var(--red);border:1px solid #ff565655;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px}
+  .pend{display:inline-block;background:rgba(255,86,86,.18);color:var(--red);border:1px solid #ff565655;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;vertical-align:middle;margin-left:6px}
   .hire{display:flex;align-items:center;justify-content:center;flex-direction:column;border:1.5px dashed var(--line);color:var(--dim);min-height:210px;border-radius:18px;cursor:pointer;transition:.18s}
   .hire:hover{border-color:var(--gold);color:var(--gold)}
   .hire .plus{font-size:38px}
@@ -149,10 +151,9 @@ function render(){
       return `<div class="et"><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${esc(t.title)}</span><span class="chs">${chs}</span><b>${t.progress}%</b></div>`;
     }).join('')+'</div>':'';
     h+=`<div class="desk ${work?'work':''}" onclick="openEmp('${e.id}')">
-      ${pend?`<span class="pin">📨 지시 ${pend}</span>`:''}
       <span class="badge ${stCls[e.status]||'b-wait'}">${esc(e.status)}</span>
-      <div class="ava">${e.avatar||'🧑‍💼'} <span style="font-size:20px">${e.mood||''}</span></div>
-      <div class="nm">${esc(e.name)}</div><div class="role">${esc(e.role)}</div>
+      <div class="avawrap"><img class="ava" src="https://api.dicebear.com/9.x/pixel-art/svg?seed=${encodeURIComponent(e.id)}" alt=""><span class="mood">${e.mood||''}</span></div>
+      <div class="nm">${esc(e.name)}${pend?`<span class="pend">📨${pend}</span>`:''}</div><div class="role">${esc(e.role)}</div>
       <div class="cur">${e.current_task?('🛠️ <b>'+esc(e.current_task)+'</b>'+(e.step?' · '+esc(e.step):'')):'<span style=\"color:#8b93a3\">대기 중 — 탭해서 업무 지시</span>'}</div>
       ${e.current_task?`<div class="bar"><i style="width:${e.progress||0}%"></i></div>`:''}
       <div class="stats"><div><b>${(e.stats||{}).제작완료||0}</b>제작</div><div><b>${(e.stats||{}).게시완료||0}</b>게시</div></div>
@@ -174,7 +175,7 @@ function openEmp(id){
   const inbox=pend.length?'<div class="lbl">받은 지시 (대기 중)</div>'+pend.map(p=>`<div class="inbox">📨 ${esc(p.body)}</div>`).join(''):'';
   document.getElementById('modal').innerHTML=`
     <span class="x" onclick="close_()">✕</span>
-    <h2>${e.avatar||'🧑‍💼'} <span id="nmview">${esc(e.name)}</span></h2>
+    <h2><img src="https://api.dicebear.com/9.x/pixel-art/svg?seed=${encodeURIComponent(id)}" style="width:48px;height:48px;border-radius:10px;background:#0c0e14;border:1px solid var(--line);image-rendering:pixelated;vertical-align:middle"> <span id="nmview">${esc(e.name)}</span> <span style="font-size:22px">${e.mood||''}</span></h2>
     <div class="role2">${esc(e.role)} · ${e.status}</div>
     <div class="cur">${e.current_task?('지금: 🛠️ <b>'+esc(e.current_task)+'</b> ('+(e.progress||0)+'%)'):'지금: 대기 중'}</div>
     <div class="lbl">이름 수정</div>
@@ -219,17 +220,17 @@ function openHire(){
     <h2>＋ 직원 채용</h2><div class="role2">새 AI 직원을 추가합니다</div>
     <div class="lbl">이름</div><input id="hn" placeholder="예: 시황이">
     <div class="lbl">역할</div><input id="hr" placeholder="예: 시황 브리핑가">
-    <div class="lbl">아바타 (이모지 1개)</div><input id="ha" placeholder="예: 📈" value="🧑‍💼">
+    <div class="hint">캐릭터(도트 이미지)는 자동으로 생성됩니다.</div>
     <button class="btn" onclick="hireSubmit()">채용하기</button>
     <button class="btn sec" onclick="close_()">취소</button>
     <div class="hint">채용 후, 그 직원의 '두뇌(업무지침)'는 Claude에게 만들어 달라고 하시면 됩니다.</div>`;
   document.getElementById('ov').classList.add('on');
 }
 async function hireSubmit(){
-  const n=document.getElementById('hn').value.trim(), r=document.getElementById('hr').value.trim(), a=document.getElementById('ha').value.trim()||'🧑‍💼';
+  const n=document.getElementById('hn').value.trim(), r=document.getElementById('hr').value.trim();
   if(!n||!r){alert('이름과 역할을 입력하세요');return;}
   const id='emp-'+Math.random().toString(36).slice(2,8);
-  await sb.from('employees').insert({id,name:n,role:r,avatar:a,status:'대기중',mood:'🙂',sort:EMP.length,stats:{},skills:[],auto_tasks:[]});
+  await sb.from('employees').insert({id,name:n,role:r,avatar:'',status:'대기중',mood:'🙂',sort:EMP.length,stats:{},skills:[],auto_tasks:[]});
   close_();
 }
 
