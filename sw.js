@@ -1,22 +1,19 @@
-// ALPHA S+ 사무실 서비스워커 — 설치형 PWA + 오프라인
-const CACHE = "office-v5";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+// ALPHA S+ 사무실 서비스워커 — 아이콘만 캐시(오프라인 아이콘), HTML/데이터는 항상 네트워크(최신).
+const CACHE = "office-static-v6";
+const ASSETS = ["icon-192.png", "icon-512.png", "manifest.json"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(a => "./" + a))));
   self.skipWaiting();
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));
   self.clients.claim();
 });
-// 네트워크 우선(상태 최신), 실패 시 캐시(오프라인)
 self.addEventListener("fetch", e => {
-  e.respondWith(
-    fetch(e.request).then(r => {
-      const cp = r.clone();
-      caches.open(CACHE).then(c => c.put(e.request, cp));
-      return r;
-    }).catch(() => caches.match(e.request))
-  );
+  const url = new URL(e.request.url);
+  // 정적 아이콘/매니페스트만 캐시-우선. 그 외(HTML·Supabase)는 손대지 않음 = 항상 최신 네트워크.
+  if (ASSETS.some(a => url.pathname.endsWith(a))) {
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  }
 });
