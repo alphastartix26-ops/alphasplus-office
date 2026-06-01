@@ -262,7 +262,7 @@ function openEmp(id){
     <div class="lbl">보유 능력</div><div class="chips">${(e.skills||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')||'<span class="hint">없음</span>'}</div>
     <div class="lbl">자동 업무</div>${auto}
     ${inbox}
-    <div class="lbl">업무 지시</div>
+    <div class="lbl">업무 지시 <span onclick="startVoice()" style="cursor:pointer;color:var(--gold);margin-left:6px">🎤 음성으로</span></div>
     <textarea id="ord" placeholder="예: TSLA 급등 릴스 만들어줘 (차트는 Claude 채팅에)"></textarea>
     <button class="btn" onclick="sendOrder('${id}')">📨 지시 보내기</button>
     <button class="btn sec" onclick="openHistory('${id}')">📋 오늘 한 업무 기록</button>
@@ -279,6 +279,16 @@ async function rename_(id){
 }
 async function rerollAvatar(id){
   await sb.from('employees').update({avatar:Math.random().toString(36).slice(2,9)}).eq('id',id);
+}
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const ta=document.getElementById('ord'); if(!ta)return;
+  if(!SR){ alert('이 기기는 웹 음성인식을 지원하지 않습니다.\n📱 아이폰은 키보드의 🎤(받아쓰기) 버튼을 눌러 말하면 됩니다.'); ta.focus(); return; }
+  try{
+    const r=new SR(); r.lang='ko-KR'; r.interimResults=false; r.maxAlternatives=1;
+    r.onresult=e=>{ ta.value=(ta.value+' '+e.results[0][0].transcript).trim(); };
+    r.start();
+  }catch(e){ ta.focus(); }
 }
 async function toggleAuto(id,idx){
   const e=EMP.find(x=>x.id===id); const at=[...(e.auto_tasks||[])];
