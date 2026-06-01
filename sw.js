@@ -1,5 +1,5 @@
 // ALPHA S+ 사무실 서비스워커 — 설치형 PWA + 오프라인
-const CACHE = "office-v2";
+const CACHE = "office-v3";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
