@@ -57,7 +57,7 @@
   .log .t{color:var(--dim);font-size:11px;white-space:nowrap}
   .log .m{color:var(--silver)}
   .dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .d-done{background:var(--green)} .d-work{background:var(--blue)} .d-wait{background:var(--silver)}
+  .d-done{background:var(--green)} .d-work{background:var(--blue)} .d-wait{background:var(--silver)} .d-review{background:var(--gold)} .d-rej{background:var(--red)}
   .ov{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
   .ov.on{display:flex}
   .modal{background:linear-gradient(180deg,var(--panel) 0,var(--panel2) 100%);border:1px solid var(--gold);border-radius:22px;max-width:520px;width:100%;padding:26px;box-shadow:0 20px 60px #000b;position:relative;max-height:90vh;overflow:auto}
@@ -100,7 +100,10 @@
 
   <div class="top">
     <div class="brand">🏢 ALPHA <b>S+</b> AI 사무실</div>
-    <div class="clock"><div id="onmsg">—</div><div><span class="on">●</span> <span id="live">실시간 연결 중…</span></div></div>
+    <div class="clock">
+      <button id="pushbtn" onclick="enablePush()" style="background:#222733;color:var(--gold);border:1px solid #e8b94b55;border-radius:20px;padding:7px 15px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:7px">🔔 알림 켜기</button>
+      <div id="onmsg">—</div><div><span class="on">●</span> <span id="live">실시간 연결 중…</span></div>
+    </div>
   </div>
   <div class="grid">
     <div>
@@ -140,7 +143,7 @@ async function loadAll(){
 function render(){
   const on=EMP.filter(x=>x.status!=='대기중').length;
   document.getElementById('onmsg').textContent=`직원 ${EMP.length}명 · 작업중 ${on}명`;
-  const dcls={"완료":"d-done","진행중":"d-work","대기":"d-wait"};
+  const dcls={"완료":"d-done","진행중":"d-work","대기":"d-wait","검수대기":"d-review","승인됨":"d-done","반려":"d-rej"};
   let h="";
   for(const e of EMP){
     const work=e.status==='작업중';
@@ -148,7 +151,8 @@ function render(){
     const pend=INST.filter(x=>x.employee===e.id).length;
     const tasksHtml=my.length?'<div class="emptasks">'+my.map(t=>{
       const chs=Object.entries(t.channels||{}).map(([k,v])=>v==='done'?'✅':'·').join('');
-      return `<div class="et"><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${esc(t.title)}</span><span class="chs">${chs}</span><b>${t.progress}%</b></div>`;
+      const rev=t.status==='검수대기';
+      return `<div class="et" ${rev?`onclick="event.stopPropagation();openReview(${t.id})" style="cursor:pointer"`:''}><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${esc(t.title)}</span>${rev?'<span class="pend" style="color:var(--gold);background:rgba(232,185,75,.15);border-color:#e8b94b55">검수 ▶</span>':`<span class="chs">${chs}</span><b>${t.progress}%</b>`}</div>`;
     }).join('')+'</div>':'';
     h+=`<div class="desk ${work?'work':''}" onclick="openEmp('${e.id}')">
       <span class="badge ${stCls[e.status]||'b-wait'}">${esc(e.status)}</span>
@@ -234,6 +238,49 @@ async function hireSubmit(){
   close_();
 }
 
+// ── 푸시 알림 ──
+const VAPID_PUB="BGRyIsXWQDx9j065vMHV6Dv12WtQ3pl6aHT3A9GfXGyGFo_Ce28YMFsPhoCmrRwPyRG9e7NQJQawBqq-xBkhPFg";
+function urlB64(s){const pad='='.repeat((4-s.length%4)%4);const b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...b].map(c=>c.charCodeAt(0)));}
+async function enablePush(){
+  try{
+    if(!('serviceWorker'in navigator)||!('PushManager'in window)){alert('이 기기/브라우저는 푸시 알림 미지원. (아이폰은 홈화면에 추가한 앱에서만 가능)');return;}
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){alert('알림 권한이 허용되지 않았습니다');return;}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64(VAPID_PUB)});
+    await sb.from('push_subs').upsert({endpoint:sub.endpoint,sub:sub.toJSON()},{onConflict:'endpoint'});
+    document.getElementById('pushbtn').textContent='🔔 알림 켜짐';
+  }catch(e){alert('알림 설정 실패: '+(e.message||e));}
+}
+function refreshPushBtn(){try{if(window.Notification&&Notification.permission==='granted')document.getElementById('pushbtn').textContent='🔔 알림 켜짐';}catch(e){}}
+
+// ── 검수 ──
+async function openReview(tid){
+  const t=TASKS.find(x=>x.id===tid); if(!t)return; openId=null;
+  document.getElementById('modal').innerHTML=`
+    <span class="x" onclick="close_()">✕</span>
+    <h2>🎬 검수</h2><div class="role2">${esc(t.title)} · 영상 확인 후 승인/반려</div>
+    ${t.video_url?`<video src="${esc(t.video_url)}" controls playsinline style="width:100%;border-radius:12px;background:#000;max-height:58vh;margin-top:6px"></video>`:'<div class="hint">미리볼 영상 URL이 없습니다.</div>'}
+    <button class="btn" onclick="approve(${t.id})">✅ 승인 — 게시 진행</button>
+    <button class="btn danger" onclick="reject(${t.id})">↩️ 반려 — 수정 요청</button>
+    <button class="btn sec" onclick="close_()">닫기</button>
+    <div class="hint">승인하면 릴팀장이 4채널 게시를 진행합니다.</div>`;
+  document.getElementById('ov').classList.add('on');
+}
+async function approve(tid){
+  const t=TASKS.find(x=>x.id===tid);
+  await sb.from('tasks').update({status:'승인됨'}).eq('id',tid);
+  await sb.from('instructions').insert({employee:t.employee,body:'[승인] '+t.title+' — 게시 진행'});
+  close_(); alert('승인했습니다 ✅ 릴팀장이 게시를 진행합니다.');
+}
+async function reject(tid){
+  const t=TASKS.find(x=>x.id===tid); const r=prompt('반려 사유 / 수정 요청 내용'); if(r===null)return;
+  await sb.from('tasks').update({status:'반려'}).eq('id',tid);
+  await sb.from('instructions').insert({employee:t.employee,body:'[반려] '+t.title+': '+r});
+  close_();
+}
+
 // 비밀번호 게이트
 const PW_HASH="8316695b9ebb1aae9960d1f261bd3009348705c8cb93761206fec89708a4d8a7";
 async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -241,6 +288,7 @@ async function auth(){const v=document.getElementById('pw').value;if(await sha25
 function enter(){
   document.getElementById('gate').style.display='none';
   loadAll();
+  refreshPushBtn();
   sb.channel('office')
     .on('postgres_changes',{event:'*',schema:'public',table:'employees'},loadAll)
     .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},loadAll)
