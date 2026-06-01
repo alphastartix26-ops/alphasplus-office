@@ -17,3 +17,19 @@ self.addEventListener("fetch", e => {
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
   }
 });
+
+// 푸시 알림 수신 (앱이 닫혀 있어도 폰 알림)
+self.addEventListener("push", e => {
+  let d = { title: "ALPHA S+ 사무실", body: "", url: "./" };
+  try { d = Object.assign(d, e.data.json()); } catch (_) { if (e.data) d.body = e.data.text(); }
+  e.waitUntil(self.registration.showNotification(d.title, {
+    body: d.body, icon: "./icon-192.png", badge: "./icon-192.png", data: { url: d.url }, vibrate: [80, 40, 80],
+  }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(ws => {
+    for (const w of ws) { if ("focus" in w) return w.focus(); }
+    if (clients.openWindow) return clients.openWindow((e.notification.data && e.notification.data.url) || "./");
+  }));
+});
