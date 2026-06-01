@@ -121,6 +121,7 @@ const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJl
 const sb = supabase.createClient(SB_URL, SB_ANON);
 let EMP=[], TASKS=[], LOG=[], INST=[], openId=null;
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function kst(ts){if(!ts)return'';const d=new Date(String(ts).replace(/\.\d+/,''));return isNaN(d.getTime())?String(ts).slice(11,16):d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});}
 const stCls={"대기중":"b-wait","작업중":"b-work","검수대기":"b-review"};
 
 async function loadAll(){
@@ -161,7 +162,7 @@ function render(){
   h+=`<div class="hire" onclick="openHire()"><div class="plus">＋</div><div>직원 채용</div></div>`;
   document.getElementById('floor').innerHTML=h;
   document.getElementById('log').innerHTML=LOG.map(l=>{
-    const tm=new Date(l.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});
+    const tm=kst(l.created_at);
     return `<div class="row"><span class="t">${tm}</span><span class="m"><b style="color:var(--gold)">${esc(l.who)}</b> ${esc(l.msg)}</span></div>`;
   }).join('')||'<div class="hint">업무 활동 없음</div>';
 }
