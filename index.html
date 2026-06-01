@@ -127,7 +127,7 @@ async function loadAll(){
   const [e,t,a,i]=await Promise.all([
     sb.from('employees').select('*').order('sort'),
     sb.from('tasks').select('*').order('created_at',{ascending:false}),
-    sb.from('activity').select('*').order('created_at',{ascending:false}).limit(25),
+    sb.from('activity').select('*').neq('who','사장님').order('created_at',{ascending:false}).limit(25),
     sb.from('instructions').select('*').eq('status','new').order('created_at',{ascending:false}),
   ]);
   EMP=e.data||[];TASKS=t.data||[];LOG=a.data||[];INST=i.data||[];
@@ -161,9 +161,9 @@ function render(){
   h+=`<div class="hire" onclick="openHire()"><div class="plus">＋</div><div>직원 채용</div></div>`;
   document.getElementById('floor').innerHTML=h;
   document.getElementById('log').innerHTML=LOG.map(l=>{
-    const tm=(l.created_at||'').slice(11,16);
+    const tm=new Date(l.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});
     return `<div class="row"><span class="t">${tm}</span><span class="m"><b style="color:var(--gold)">${esc(l.who)}</b> ${esc(l.msg)}</span></div>`;
-  }).join('')||'<div class="hint">활동 없음</div>';
+  }).join('')||'<div class="hint">업무 활동 없음</div>';
 }
 
 function openEmp(id){
@@ -194,7 +194,6 @@ function close_(){openId=null;document.getElementById('ov').classList.remove('on
 async function rename_(id){
   const v=document.getElementById('rn').value.trim(); if(!v)return;
   await sb.from('employees').update({name:v}).eq('id',id);
-  await sb.from('activity').insert({who:'사장님',msg:`직원 이름을 '${v}'(으)로 변경`});
 }
 async function toggleAuto(id,idx){
   const e=EMP.find(x=>x.id===id); const at=[...(e.auto_tasks||[])];
@@ -203,16 +202,13 @@ async function toggleAuto(id,idx){
 }
 async function sendOrder(id){
   const v=document.getElementById('ord').value.trim(); if(!v){return;}
-  const e=EMP.find(x=>x.id===id);
   await sb.from('instructions').insert({employee:id,body:v});
-  await sb.from('activity').insert({who:'사장님',msg:`${e.name}에게 지시: ${v.slice(0,40)}`});
   document.getElementById('ord').value='';
   const b=event.target;b.textContent='✅ 보냈습니다';setTimeout(()=>b.textContent='📨 지시 보내기',1500);
 }
 async function fire(id,name){
   if(!confirm(`${name} 직원을 해고할까요? (되돌릴 수 없음)`))return;
   await sb.from('employees').delete().eq('id',id);
-  await sb.from('activity').insert({who:'사장님',msg:`${name} 해고`});
   close_();
 }
 function openHire(){
@@ -233,7 +229,6 @@ async function hireSubmit(){
   if(!n||!r){alert('이름과 역할을 입력하세요');return;}
   const id='emp-'+Math.random().toString(36).slice(2,8);
   await sb.from('employees').insert({id,name:n,role:r,avatar:a,status:'대기중',mood:'🙂',sort:EMP.length,stats:{},skills:[],auto_tasks:[]});
-  await sb.from('activity').insert({who:'사장님',msg:`${n} (${r}) 채용 🎉`});
   close_();
 }
 
