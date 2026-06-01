@@ -87,6 +87,30 @@
     .brand{font-size:21px}.clock{text-align:left;font-size:12px}
     .grid{gap:16px}.floor{grid-template-columns:1fr}
   }
+  /* 탭 */
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{padding:9px 18px;border-radius:12px;background:#14161d;border:1px solid var(--line);color:var(--dim);font-weight:700;font-size:14px;cursor:pointer;transition:.15s}
+  .tab.active{background:linear-gradient(90deg,#e8b94b,#ffd778);color:#1a1407;border-color:transparent}
+  .hidden{display:none}
+  /* 레벨/경험치 */
+  .lvchip{display:inline-block;background:#1a1407;color:var(--gold);border:1px solid var(--gold);font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;vertical-align:middle;margin-left:6px}
+  .xpbar{height:5px;background:#0c0e14;border-radius:5px;margin-top:10px;overflow:hidden;border:1px solid #00000055}
+  .xpbar>i{display:block;height:100%;background:linear-gradient(90deg,#7d5fff,#b39dff);border-radius:5px;transition:width .5s}
+  .xptxt{font-size:10px;color:var(--dim);margin-top:4px}
+  /* 칸반 */
+  .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:760px){.kanban{grid-template-columns:1fr 1fr}}
+  .kcol{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;min-height:120px}
+  .kcol h4{font-size:13px;color:var(--silver);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+  .kcol h4 .cnt{color:var(--dim);font-weight:600;font-size:12px}
+  .kcard{background:#0c0e14;border:1px solid var(--line);border-left:3px solid var(--silver);border-radius:10px;padding:10px 12px;margin-bottom:9px;font-size:13px;cursor:pointer}
+  .kcard.k-work{border-left-color:var(--blue)} .kcard.k-review{border-left-color:var(--gold)} .kcard.k-done{border-left-color:var(--green)} .kcard.k-rej{border-left-color:var(--red)}
+  .kcard .kemp{font-size:11px;color:var(--gold);margin-top:4px}
+  /* 성과 */
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .statbox{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center}
+  .statbox b{display:block;font-size:34px;color:var(--gold);font-weight:800;line-height:1.1}
+  .statbox span{font-size:12px;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -105,17 +129,32 @@
       <div id="onmsg">—</div><div><span class="on">●</span> <span id="live">실시간 연결 중…</span></div>
     </div>
   </div>
-  <div class="grid">
-    <div>
-      <div class="section-title">사무실 · 직원</div>
-      <div class="floor" id="floor"></div>
-    </div>
-    <div class="side">
-      <div class="card">
-        <div class="section-title" style="margin-bottom:10px">활동 로그</div>
-        <div class="log" id="log"></div>
+  <div class="tabs">
+    <div class="tab active" id="tab-office" onclick="switchView('office')">🏢 사무실</div>
+    <div class="tab" id="tab-board" onclick="switchView('board')">📋 업무 보드</div>
+    <div class="tab" id="tab-stats" onclick="switchView('stats')">📊 성과</div>
+  </div>
+  <div id="view-office">
+    <div class="grid">
+      <div>
+        <div class="section-title">사무실 · 직원</div>
+        <div class="floor" id="floor"></div>
+      </div>
+      <div class="side">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:10px">활동 로그</div>
+          <div class="log" id="log"></div>
+        </div>
       </div>
     </div>
+  </div>
+  <div id="view-board" class="hidden">
+    <div class="section-title">업무 보드 (칸반)</div>
+    <div class="kanban" id="kanban"></div>
+  </div>
+  <div id="view-stats" class="hidden">
+    <div class="section-title">성과 대시보드</div>
+    <div class="statgrid" id="statgrid"></div>
   </div>
 
   <div class="ov" id="ov" onclick="if(event.target===this)close_()"><div class="modal" id="modal"></div></div>
@@ -127,6 +166,31 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 let EMP=[], TASKS=[], LOG=[], INST=[], openId=null;
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function kst(ts){if(!ts)return'';const d=new Date(String(ts).replace(/\.\d+/,''));return isNaN(d.getTime())?String(ts).slice(11,16):d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});}
+function xpOf(e){const s=e.stats||{};return (s.제작완료||0)*15+(s.게시완료||0)*25;}
+function levelOf(xp){let lvl=1,need=100,cum=0;while(xp>=cum+need){cum+=need;lvl++;need=Math.round(need*1.4);}return{lvl,cur:xp-cum,need,pct:Math.round((xp-cum)/need*100)};}
+let VIEW='office';
+function switchView(v){VIEW=v;['office','board','stats'].forEach(n=>{document.getElementById('view-'+n).classList.toggle('hidden',n!==v);document.getElementById('tab-'+n).classList.toggle('active',n===v);});}
+function renderKanban(){
+  const nameOf=id=>{const e=EMP.find(x=>x.id===id);return e?e.name:id;};
+  const cols=[['대기',t=>t.status==='대기'||t.status==='반려'],['진행중',t=>t.status==='진행중'||t.status==='작업중'],['검수대기',t=>t.status==='검수대기'],['완료/승인',t=>t.status==='완료'||t.status==='승인됨']];
+  let h='';
+  for(const [label,fn] of cols){
+    const items=TASKS.filter(fn);
+    h+=`<div class="kcol"><h4>${label} <span class="cnt">${items.length}</span></h4>`+(items.map(t=>{
+      const cls=(t.status==='진행중'||t.status==='작업중')?'k-work':(t.status==='검수대기'?'k-review':((t.status==='완료'||t.status==='승인됨')?'k-done':(t.status==='반려'?'k-rej':'')));
+      return `<div class="kcard ${cls}" ${t.status==='검수대기'?`onclick="openReview(${t.id})"`:''}>${esc(t.title)}<div class="kemp">${esc(nameOf(t.employee))} · ${esc(t.status)}</div></div>`;
+    }).join('')||'<div class="hint">없음</div>')+'</div>';
+  }
+  document.getElementById('kanban').innerHTML=h;
+}
+function renderStats(){
+  const made=EMP.reduce((s,e)=>s+((e.stats||{}).제작완료||0),0);
+  const pub=EMP.reduce((s,e)=>s+((e.stats||{}).게시완료||0),0);
+  const review=TASKS.filter(t=>t.status==='검수대기').length;
+  const totalXp=EMP.reduce((s,e)=>s+xpOf(e),0);
+  const boxes=[['👥',EMP.length,'직원'],['🎬',made,'제작 완료'],['📤',pub,'게시 완료'],['🎬',review,'검수 대기'],['⭐',totalXp,'팀 총 XP'],['📋',TASKS.length,'누적 업무']];
+  document.getElementById('statgrid').innerHTML=boxes.map(b=>`<div class="statbox"><b>${b[1]}</b><span>${b[0]} ${b[2]}</span></div>`).join('');
+}
 const stCls={"대기중":"b-wait","작업중":"b-work","검수대기":"b-review"};
 
 async function loadAll(){
@@ -154,13 +218,15 @@ function render(){
       const rev=t.status==='검수대기';
       return `<div class="et" ${rev?`onclick="event.stopPropagation();openReview(${t.id})" style="cursor:pointer"`:''}><span class="dot ${dcls[t.status]||'d-wait'}"></span><span class="ett">${esc(t.title)}</span>${rev?'<span class="pend" style="color:var(--gold);background:rgba(232,185,75,.15);border-color:#e8b94b55">검수 ▶</span>':`<span class="chs">${chs}</span><b>${t.progress}%</b>`}</div>`;
     }).join('')+'</div>':'';
+    const _lv=levelOf(xpOf(e));
     h+=`<div class="desk ${work?'work':''}" onclick="openEmp('${e.id}')">
       <span class="badge ${stCls[e.status]||'b-wait'}">${esc(e.status)}</span>
       <div class="avawrap"><img class="ava" src="https://api.dicebear.com/9.x/pixel-art/svg?seed=${encodeURIComponent(e.id)}" alt=""><span class="mood">${e.mood||''}</span></div>
-      <div class="nm">${esc(e.name)}${pend?`<span class="pend">📨${pend}</span>`:''}</div><div class="role">${esc(e.role)}</div>
+      <div class="nm">${esc(e.name)}<span class="lvchip">Lv.${_lv.lvl}</span>${pend?`<span class="pend">📨${pend}</span>`:''}</div><div class="role">${esc(e.role)}</div>
       <div class="cur">${e.current_task?('🛠️ <b>'+esc(e.current_task)+'</b>'+(e.step?' · '+esc(e.step):'')):'<span style=\"color:#8b93a3\">대기 중 — 탭해서 업무 지시</span>'}</div>
       ${e.current_task?`<div class="bar"><i style="width:${e.progress||0}%"></i></div>`:''}
       <div class="stats"><div><b>${(e.stats||{}).제작완료||0}</b>제작</div><div><b>${(e.stats||{}).게시완료||0}</b>게시</div></div>
+      <div class="xpbar"><i style="width:${_lv.pct}%"></i></div><div class="xptxt">XP ${_lv.cur}/${_lv.need} · 다음 레벨까지 ${_lv.need-_lv.cur}</div>
       ${tasksHtml}
     </div>`;
   }
@@ -170,6 +236,7 @@ function render(){
     const tm=kst(l.created_at);
     return `<div class="row"><span class="t">${tm}</span><span class="m"><b style="color:var(--gold)">${esc(l.who)}</b> ${esc(l.msg)}</span></div>`;
   }).join('')||'<div class="hint">업무 활동 없음</div>';
+  renderKanban(); renderStats();
 }
 
 function openEmp(id){
