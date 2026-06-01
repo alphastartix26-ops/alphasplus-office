@@ -241,11 +241,11 @@ async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEn
   return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function auth(){
   const v=document.getElementById('pw').value;
-  if(await sha256(v)===PW_HASH){sessionStorage.setItem('office_auth','1');enter();}
+  if(await sha256(v)===PW_HASH){localStorage.setItem('office_auth','1');enter();}
   else{document.getElementById('pwerr').textContent='비밀번호가 틀렸습니다';}
 }
 function enter(){document.getElementById('gate').style.display='none';load();setInterval(load,3000);}
-if(sessionStorage.getItem('office_auth')==='1'){enter();}
+if(localStorage.getItem('office_auth')==='1'){enter();}
 else{setTimeout(()=>document.getElementById('pw')?.focus(),100);}
 
 // PWA 서비스워커 등록 (설치형 앱)
