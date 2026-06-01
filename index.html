@@ -2,8 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ALPHA S+ AI 사무실</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0c10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="S+ 사무실">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <style>
   :root{
     --bg:#0b0c10; --panel:#14161d; --panel2:#1b1e27; --line:#272b36;
@@ -239,6 +247,11 @@ async function auth(){
 function enter(){document.getElementById('gate').style.display='none';load();setInterval(load,3000);}
 if(sessionStorage.getItem('office_auth')==='1'){enter();}
 else{setTimeout(()=>document.getElementById('pw')?.focus(),100);}
+
+// PWA 서비스워커 등록 (설치형 앱)
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 </script>
 </body>
 </html>
