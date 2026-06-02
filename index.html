@@ -171,7 +171,7 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 let EMP=[], TASKS=[], LOG=[], INST=[], openId=null;
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function kst(ts){if(!ts)return'';const d=new Date(String(ts).replace(/\.\d+/,''));return isNaN(d.getTime())?String(ts).slice(11,16):d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});}
-function xpOf(e){const s=e.stats||{};return (s.제작완료||0)*15+(s.게시완료||0)*25;}
+function xpOf(e){const s=e.stats||{};let xp=0;for(const k in s)xp+=(+s[k]||0)*(k==='게시완료'?25:15);return xp;}
 function levelOf(xp){let lvl=1,need=100,cum=0;while(xp>=cum+need){cum+=need;lvl++;need=Math.round(need*1.4);}return{lvl,cur:xp-cum,need,pct:Math.round((xp-cum)/need*100)};}
 let VIEW='office';
 function switchView(v){VIEW=v;['office','board','stats'].forEach(n=>{document.getElementById('view-'+n).classList.toggle('hidden',n!==v);document.getElementById('tab-'+n).classList.toggle('active',n===v);});}
