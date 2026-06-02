@@ -270,6 +270,7 @@ function openEmp(id){
     <input type="file" id="ordfiles" accept="image/*" multiple style="margin-top:8px;width:100%;font-size:12px;color:var(--silver)">
     <button class="btn" onclick="sendOrder('${id}')">📨 지시 보내기 (이미지 첨부 가능)</button>
     <button class="btn sec" onclick="openHistory('${id}')">📋 오늘 한 업무 기록</button>
+    <button class="btn sec" onclick="openActivityLog('${id}')">🗒️ 활동 로그</button>
     <button class="btn sec" onclick="close_()">닫기</button>
     <button class="btn danger" onclick="fire('${id}','${esc(e.name)}')">🚪 ${esc(e.name)} 해고</button>
     <div class="hint">지시는 큐에 쌓이고, 해당 직원(AI)이 받아 처리합니다. 차트 이미지가 필요한 업무는 Claude 채팅에 함께 올려주세요.</div>`;
@@ -417,6 +418,20 @@ function openHistory(id){
     <span class="x" onclick="openEmp('${id}')">✕</span>
     <h2>📋 업무 기록</h2><div class="role2">${esc(e.name)} · 최근 ${my.length}건 (최대 50)</div>
     <div style="max-height:60vh;overflow:auto;margin-top:8px">${rows}</div>
+    <button class="btn sec" onclick="openEmp('${id}')">← 돌아가기</button>`;
+  document.getElementById('ov').classList.add('on');
+}
+
+// 직원별 활동 로그 (그 직원이 한 활동만)
+async function openActivityLog(id){
+  const e=EMP.find(x=>x.id===id); if(!e)return; openId=null;
+  const {data}=await sb.from('activity').select('*').eq('who',e.name).order('created_at',{ascending:false}).limit(50);
+  const list=data||[];
+  const rows=list.length?list.map(a=>`<div style="padding:11px 0;border-bottom:1px solid #20242e;font-size:13px"><div style="color:#8b93a3;font-size:11px;margin-bottom:4px">${kst(a.created_at)}</div><div style="color:var(--silver);line-height:1.55">${esc(a.msg)}</div></div>`).join(''):'<div class="hint">아직 활동 기록이 없습니다</div>';
+  document.getElementById('modal').innerHTML=`
+    <span class="x" onclick="openEmp('${id}')">✕</span>
+    <h2>🗒️ 활동 로그</h2><div class="role2">${esc(e.name)} · 최근 ${list.length}건</div>
+    <div style="max-height:62vh;overflow:auto;margin-top:8px">${rows}</div>
     <button class="btn sec" onclick="openEmp('${id}')">← 돌아가기</button>`;
   document.getElementById('ov').classList.add('on');
 }
