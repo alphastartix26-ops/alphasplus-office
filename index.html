@@ -32,6 +32,9 @@
   .b-wait{background:#2a2f3a;color:var(--silver)}
   .b-work{background:rgba(77,141,255,.18);color:var(--blue);border:1px solid #4d8dff55}
   .b-review{background:rgba(232,185,75,.18);color:var(--gold);border:1px solid #e8b94b55}
+  .rchip{display:inline-block;padding:9px 15px;border-radius:999px;background:#1a1e27;border:1px solid #2a2f3a;color:var(--silver);font-size:13.5px;cursor:pointer;user-select:none;transition:.12s}
+  .rchip.on{background:rgba(255,90,90,.22);border-color:var(--red);color:#fff;font-weight:700}
+  .rmemo{width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border-radius:10px;background:#14171f;border:1px solid #2a2f3a;color:#e7ebf2;font-size:14px;font-family:inherit;resize:vertical;min-height:56px}
   .avawrap{position:relative;width:66px;height:66px}
   .ava{width:66px;height:66px;border-radius:12px;background:#0c0e14;border:1px solid var(--line);image-rendering:pixelated;display:block}
   .work .avawrap{animation:bob 1.6s ease-in-out infinite}
@@ -375,11 +378,31 @@ async function approve(tid){
   await sb.from('instructions').insert({employee:t.employee,body:'[승인] '+t.title+' — 게시 진행'});
   close_(); alert('승인 완료 ✅ 카드에 "게시 대기"로 바로 표시됩니다.');
 }
-async function reject(tid){
-  const t=TASKS.find(x=>x.id===tid); const r=prompt('반려 사유 / 수정 요청 내용'); if(r===null)return;
+const REJECT_REASONS=['인트로 문구·잘림','마커 위치','발음·TTS','지표명','길이(너무 김)','사실관계·뉴스','분석 깊이(일반론)','자막·디자인','처음부터 다시'];
+let _rejSel=new Set();
+function reject(tid){
+  _rejSel=new Set();
+  const t=TASKS.find(x=>x.id===tid); if(!t)return;
+  document.getElementById('modal').innerHTML=`
+    <span class="x" onclick="close_()">✕</span>
+    <h2>↩️ 반려 사유</h2><div class="role2">${esc(t.title)} · 해당 항목을 탭하세요 (여러 개 선택 가능)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:9px;margin:16px 0 12px">
+      ${REJECT_REASONS.map(r=>`<span class="rchip" onclick="toggleRej(this,'${r}')">${r}</span>`).join('')}
+    </div>
+    <textarea id="rmemo" class="rmemo" placeholder="추가 설명(선택) — 예: 마커가 고점에 찍힘, 발음 디센트→…"></textarea>
+    <button class="btn danger" onclick="sendReject(${t.id})" style="margin-top:12px">↩️ 반려 보내기</button>
+    <button class="btn sec" onclick="openReview(${t.id})">← 영상 다시 보기</button>`;
+}
+function toggleRej(el,r){ if(_rejSel.has(r)){_rejSel.delete(r);el.classList.remove('on');}else{_rejSel.add(r);el.classList.add('on');} }
+async function sendReject(tid){
+  const t=TASKS.find(x=>x.id===tid); if(!t)return;
+  const memo=(document.getElementById('rmemo').value||'').trim();
+  const reasons=[..._rejSel];
+  if(!reasons.length && !memo){ alert('사유를 하나 이상 선택하거나 메모를 입력하세요'); return; }
+  const body='[반려] '+t.title+': '+reasons.join(', ')+(memo?(reasons.length?' / ':'')+memo:'');
   await sb.from('tasks').update({status:'반려'}).eq('id',tid);
   await sb.from('employees').update({status:'작업중',mood:'😵',current_task:'[수정 요청] '+t.title,progress:0}).eq('id',t.employee);
-  await sb.from('instructions').insert({employee:t.employee,body:'[반려] '+t.title+': '+r});
+  await sb.from('instructions').insert({employee:t.employee,body});
   close_(); alert('반려 접수 ↩️ 카드에 "수정 요청"으로 바로 표시됩니다.');
 }
 
